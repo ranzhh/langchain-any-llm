@@ -174,7 +174,15 @@ def _convert_delta_to_message_chunk(
 
         # Build tool_call_chunks from object delta
         if raw_tool_calls := delta.tool_calls:
-            additional_kwargs["tool_calls"] = raw_tool_calls
+            # These are openai ChoiceDeltaToolCall instances whose lazy MockValSer
+            # has not been built yet, so any later model_dump() of the message
+            # raises TypeError -- which takes tracing callbacks and checkpoint
+            # writes down with it. Store plain dicts; the chunk building below
+            # still reads the objects from raw_tool_calls.
+            additional_kwargs["tool_calls"] = [
+                rtc.model_dump() if hasattr(rtc, "model_dump") else rtc
+                for rtc in raw_tool_calls
+            ]
             try:
                 tool_call_chunks = [
                     ToolCallChunk(

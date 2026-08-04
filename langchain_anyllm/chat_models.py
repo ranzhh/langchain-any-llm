@@ -107,7 +107,11 @@ class ChatAnyLLM(BaseChatModel):
     top_p: float | None = None
     response_format: dict[str, Any] | None = None
     model_kwargs: dict[str, Any] = Field(default_factory=dict)
-    stream_options: dict[str, Any] | None = None
+    # OpenAI-compatible backends omit usage from streamed responses unless it is
+    # asked for, so a None default makes every streamed call report no tokens at
+    # all. Providers that do not accept the option strip it in their own param
+    # conversion, and _stream/_astream already skip it for Anthropic.
+    stream_options: dict[str, Any] | None = {"include_usage": True}
 
     def _generate(
         self,

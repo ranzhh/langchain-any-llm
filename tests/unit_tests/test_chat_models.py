@@ -144,6 +144,18 @@ class TestChatAnyLLM:
         structured_llm = llm.with_structured_output(TestSchema)
         assert structured_llm is not None
 
+    def test_stream_options_requests_usage_by_default(self) -> None:
+        """Streamed calls report usage without the caller having to opt in."""
+        llm = ChatAnyLLM(model="openai:gpt-4o-mini")
+        assert llm.stream_options == {"include_usage": True}
+
+    def test_stream_options_can_be_overridden(self) -> None:
+        """An explicitly passed stream_options still wins over the default."""
+        llm = ChatAnyLLM(
+            model="openai:gpt-4o-mini", stream_options={"include_usage": False}
+        )
+        assert llm.stream_options == {"include_usage": False}
+
     def test_create_chat_result_keeps_token_usage_msgpack_serializable(self) -> None:
         """Test token usage metadata stays serializable after LangChain merges it."""
         llm = ChatAnyLLM(model="openai:gpt-4o-mini")
