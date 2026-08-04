@@ -174,7 +174,11 @@ def _convert_delta_to_message_chunk(
 
         # Build tool_call_chunks from object delta
         if raw_tool_calls := delta.tool_calls:
-            additional_kwargs["tool_calls"] = raw_tool_calls
+            # Store dicts; the raw objects are not reliably serializable
+            additional_kwargs["tool_calls"] = [
+                rtc.model_dump() if hasattr(rtc, "model_dump") else rtc
+                for rtc in raw_tool_calls
+            ]
             try:
                 tool_call_chunks = [
                     ToolCallChunk(
