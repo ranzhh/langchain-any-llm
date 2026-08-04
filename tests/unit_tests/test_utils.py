@@ -1,7 +1,14 @@
 """Test utility functions."""
 
+import msgpack
+from any_llm.types.completion import (
+    ChoiceDelta,
+    ChoiceDeltaToolCall,
+    ChoiceDeltaToolCallFunction,
+)
 from langchain_core.messages import (
     AIMessage,
+    AIMessageChunk,
     HumanMessage,
     SystemMessage,
     ToolCall,
@@ -9,6 +16,7 @@ from langchain_core.messages import (
 )
 
 from langchain_anyllm.utils import (
+    _convert_delta_to_message_chunk,
     _convert_dict_to_message,
     _convert_message_to_dict,
     _lc_tool_call_to_openai_tool_call,
@@ -102,3 +110,33 @@ class TestMessageConversion:
         result = _convert_dict_to_message(message_dict)
         assert isinstance(result, AIMessage)
         assert result.content == ""
+
+
+class TestDeltaConversion:
+    """Test streaming delta conversion utilities."""
+
+    def test_delta_tool_calls_are_stored_as_plain_dicts(self) -> None:
+        """Test delta tool calls are stored as serializable dicts."""
+        delta = ChoiceDelta(
+            role="assistant",
+            content="",
+            tool_calls=[
+                ChoiceDeltaToolCall(
+                    index=0,
+                    id="call_1",
+                    type="function",
+                    function=ChoiceDeltaToolCallFunction(
+                        name="get_weather", arguments='{"city": "Rome"}'
+                    ),
+                )
+            ],
+        )
+
+        chunk = _convert_delta_to_message_chunk(delta, AIMessageChunk)
+        assert isinstance(chunk, AIMessageChunk)
+
+        stored = chunk.additional_kwargs["tool_calls"]
+        assert all(isinstance(tc, dict) for tc in stored)
+        assert msgpack.packb(stored) is not None
+        # the parsed chunks still carry the call through
+        assert chunk.tool_call_chunks[0]["name"] == "get_weather"
