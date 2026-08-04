@@ -107,7 +107,8 @@ class ChatAnyLLM(BaseChatModel):
     top_p: float | None = None
     response_format: dict[str, Any] | None = None
     model_kwargs: dict[str, Any] = Field(default_factory=dict)
-    stream_options: dict[str, Any] | None = None
+    # Streamed responses omit usage unless it is asked for
+    stream_options: dict[str, Any] | None = {"include_usage": True}
 
     def _generate(
         self,
