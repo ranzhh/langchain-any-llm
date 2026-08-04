@@ -6,6 +6,8 @@ This integration enables you to use [any-llm's](https://github.com/mozilla-ai/an
 
 No need to rewrite your provider-specific adapter code every time you want to test a new model. Switch between OpenAI, Anthropic, Gemini, and local models (via Ollama/LocalAI) just by changing a string.
 
+This is a fork of [mozilla-ai/langchain-any-llm](https://github.com/mozilla-ai/langchain-any-llm), carrying fixes for a few issues that weren't merged upstream.
+
 ## Features
 
 - **Unified Interface**: Use OpenAI, Anthropic, Google, or local models through a single API
@@ -18,14 +20,16 @@ No need to rewrite your provider-specific adapter code every time you want to te
 
 ## Installation
 
-### From PyPI
+### From this fork
+
+This fork is not published to PyPI, so install it from git:
 
 ```bash
-pip install langchain-anyllm
+pip install git+https://github.com/ranzhh/langchain-any-llm
 ```
 or
 ```bash
-uv add langchain-anyllm
+uv add git+https://github.com/ranzhh/langchain-any-llm
 ```
 ## Quick Start
 
@@ -145,7 +149,7 @@ any-llm supports a wide range of providers. See the [full list here](https://moz
 ### Clone the repo
 
 ```bash
-git clone https://github.com/mozilla-ai/langchain-any-llm.git
+git clone https://github.com/ranzhh/langchain-any-llm.git
 cd langchain-any-llm
 ```
 
