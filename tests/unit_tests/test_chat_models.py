@@ -182,6 +182,27 @@ class TestChatAnyLLM:
         }
         msgpack.packb(message.model_dump())
 
+    def test_reports_reasoning_and_cached_token_details(self) -> None:
+        """Reasoning and cached tokens reach LangChain as token details."""
+        llm = ChatAnyLLM(model="gemini:gemini-2.5-flash")
+        usage_metadata = llm._extract_usage_metadata(
+            {
+                "prompt_tokens": 100,
+                "completion_tokens": 60,
+                "total_tokens": 160,
+                "completion_tokens_details": {"reasoning_tokens": 37},
+                "prompt_tokens_details": {"cached_tokens": 80},
+            }
+        )
+
+        assert usage_metadata == {
+            "input_tokens": 100,
+            "output_tokens": 60,
+            "total_tokens": 160,
+            "output_token_details": {"reasoning": 37},
+            "input_token_details": {"cache_read": 80},
+        }
+
     @pytest.mark.parametrize(
         ("model", "provider", "expected_provider", "expected_model"),
         [

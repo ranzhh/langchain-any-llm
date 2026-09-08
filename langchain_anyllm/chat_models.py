@@ -43,7 +43,11 @@ from langchain_core.messages import (
     BaseMessage,
     BaseMessageChunk,
 )
-from langchain_core.messages.ai import UsageMetadata
+from langchain_core.messages.ai import (
+    InputTokenDetails,
+    OutputTokenDetails,
+    UsageMetadata,
+)
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
@@ -226,19 +230,37 @@ class ChatAnyLLM(BaseChatModel):
     ) -> UsageMetadata | None:
         """Extract usage metadata from a usage dictionary.
 
+        Reasoning and cached tokens are subsets of the completion and prompt counts
+        respectively, which is the same convention LangChain uses for the detail
+        fields, so both are reported without adjusting the totals.
+
         Args:
             usage: Dictionary containing usage information.
 
         Returns:
-            UsageMetadata object or None if usage is not available.
+            UsageMetadata object or None if usage is not available, carrying detail
+            fields only for the categories the provider reported.
         """
         if not usage:
             return None
-        return UsageMetadata(
+        metadata = UsageMetadata(
             input_tokens=usage.get("prompt_tokens", 0),
             output_tokens=usage.get("completion_tokens", 0),
             total_tokens=usage.get("total_tokens", 0),
         )
+        completion_details = usage.get("completion_tokens_details") or {}
+        reasoning_tokens = completion_details.get("reasoning_tokens")
+        if reasoning_tokens:
+            metadata["output_token_details"] = OutputTokenDetails(
+                reasoning=reasoning_tokens
+            )
+        prompt_details = usage.get("prompt_tokens_details") or {}
+        cached_tokens = prompt_details.get("cached_tokens")
+        if cached_tokens:
+            metadata["input_token_details"] = InputTokenDetails(
+                cache_read=cached_tokens
+            )
+        return metadata
 
     def _create_chat_result(self, response: ChatCompletion) -> ChatResult:
         """Create a ChatResult from an API response.
